@@ -165,7 +165,7 @@ Patch deletion attributes
 -dheic  Delete HEIC files if JPG file exists
 -dimg   Delete IMG_ files (4:3) if IMG_E file (16:9) exists
 -dimge  Delete IMG_E files (16:9) files if IMG_ file (4:3) exists
--daae   Delete AAD files";
+-daae   Delete AAE files";
             Console.WriteLine(helpText);
             Environment.Exit(0);
         }
