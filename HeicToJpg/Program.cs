@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-// MIT license
+// NSD Oy Finland - MIT license
 // First install: https://imagemagick.org/script/download.php#windows
 
 namespace HeicToJpg {
@@ -11,25 +11,33 @@ namespace HeicToJpg {
         private static int filesConverted = 0;
 
         static void Main(string[] args) {
-            if(args.Any(z => z == "-h") || args.Any(z => z == "-?")) helpText();
+            if (args.Any(z => z == "-h") || args.Any(z => z == "-?")) helpText();
 
             Console.WriteLine("\r\nCommand line HEIC to JPG converter");
             Console.WriteLine("\r\nHelp: HeicToJpg -h \r\n");
 
             bool subFolders = args.Any(z => z == "-s");
             bool overwriteJpgs = args.Any(z => z == "-o");
-            bool deleteHeics = args.Any(z => z == "-d");
-            bool deleteAae = args.Any(z => z == "-daae");
+            bool deleteConvertedHeics = args.Any(z => z == "-d");
+            bool deleteHeics = args.Any(z => z == "-dheic");
+            bool deleteImgs = args.Any(z => z == "-dimg");
+            bool deleteImges = args.Any(z => z == "-dimge");
+            bool deleteAaes = args.Any(z => z == "-daae");
+
+            if(deleteImgs && deleteImges) {
+                Console.Write("Don't delete both IMG_ and IMG_E files");
+                Environment.Exit(0);
+            }
 
             string baseFolder = System.IO.Directory.GetCurrentDirectory();
 
             // First current directory
-            processDirectory(baseFolder, overwriteJpgs, deleteHeics, deleteAae);
+            processDirectory(baseFolder, overwriteJpgs, deleteConvertedHeics, deleteHeics, deleteImgs, deleteImges, deleteAaes);
 
             // Then all subdirectories
             if (subFolders) {
                 foreach (var directory in Directory.GetDirectories(baseFolder)) {
-                    processDirectory(directory, overwriteJpgs, deleteHeics, deleteAae);
+                    processDirectory(directory, overwriteJpgs, deleteConvertedHeics, deleteHeics, deleteImgs, deleteImges, deleteAaes);
                 }
             }
 
@@ -37,7 +45,7 @@ namespace HeicToJpg {
         }
 
         // Process single directory
-        private static void processDirectory(string directory, bool overwriteJpgs, bool deleteHeic, bool deleteAae) {
+        private static void processDirectory(string directory, bool overwriteJpgs, bool deleteConvertedHeics, bool deleteHeics, bool deleteImgs, bool deleteImges, bool deleteAaes) {
             Console.WriteLine("Processing folder " + directory);
 
             DirectoryInfo di = new DirectoryInfo(directory.ToString());
@@ -56,7 +64,8 @@ namespace HeicToJpg {
                     runCommand(command);
                     Console.Write(fileName + " converted ");
 
-                    if (deleteHeic) {
+                    // Delete heic after converting
+                    if (deleteConvertedHeics) {
                         file.Delete();
                         Console.Write("and deleted");
                     }
@@ -67,17 +76,46 @@ namespace HeicToJpg {
 
             if (oneFileFound) Console.WriteLine("\r\n");
 
-            // Special delete for iPhone 16:9 images
-            if (deleteAae) {
-                Console.WriteLine("Deleting AAE and IMG_E files");
+            // Delete IMG_ files if IMG_E exists
+            if (deleteHeics) {
+                Console.WriteLine("Deleting HEIC files if JPG file exists");
+                FileInfo[] files3 = di.GetFiles("*.HEIC");
+                foreach (FileInfo file in files3) {
+                    string fileName = file.Name.Replace(".HEIC", ".heic");
+                    string newFileName = fileName.Replace(".heic", ".jpg");
+                    if (File.Exists(directory.ToString() + "\\" + newFileName)) file.Delete();
+                }
+            }
 
-                FileInfo[] files2 = di.GetFiles("*.AAE");
-                foreach (FileInfo file in files2) file.Delete(); 
-
+            // Delete IMG_ files if IMG_E exists
+            if (deleteImgs) {
+                Console.WriteLine("Deleting IMG_ files if IMG_E exists");
                 FileInfo[] files3 = di.GetFiles("*.JPG");
-                foreach (FileInfo file in files3) if (file.Name.StartsWith("IMG_E")) file.Delete();
+                foreach (FileInfo file in files3) {
+                    if (file.Name.StartsWith("IMG_") && !file.Name.StartsWith("IMG_E")) {
+                        string checkFile = file.Name.Replace("IMG_", "IMG_E");
+                        if(File.Exists(directory.ToString() + "\\" + checkFile)) file.Delete();
+                    }
+                }
+            }
 
-                Console.WriteLine("");
+            // Delete IMG_E files if IMG_ exists
+            if (deleteImges) {
+                Console.WriteLine("Deleting IMG_E files if IMG_ exists");
+                FileInfo[] files3 = di.GetFiles("*.JPG");
+                foreach (FileInfo file in files3) {
+                    if (file.Name.StartsWith("IMG_E")) {
+                        string checkFile = file.Name.Replace("IMG_E", "IMG_");
+                        if (File.Exists(directory.ToString() + "\\" + checkFile)) file.Delete();
+                    }
+                }
+            }
+
+            // Delete AAE files
+            if (deleteAaes) {
+                Console.WriteLine("Deleting AAE files");
+                FileInfo[] files2 = di.GetFiles("*.AAE");
+                foreach (FileInfo file in files2) file.Delete();
             }
         }
 
@@ -115,12 +153,19 @@ Command line HEIC to JPG converter
 -s      Process subfolders
 -o      Overwrite existing JPG files
 -d      Delete HEIC files after converting to JPG
--daae   Delete AAD and IMG_E files
 
 Sample: heictojpg -s -o -d
 
 GitHub: https://github.com/nsdnwe/HeicToJpg
-";
+
+---------------------------------------------------
+
+Patch deletion attributes
+
+-dheic  Delete HEIC files if JPG file exists
+-dimg   Delete IMG_ files (4:3) if IMG_E file (16:9) exists
+-dimge  Delete IMG_E files (16:9) files if IMG_ file (4:3) exists
+-daae   Delete AAD files";
             Console.WriteLine(helpText);
             Environment.Exit(0);
         }
