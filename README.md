@@ -25,7 +25,15 @@ OR
 -s      Process subfolders
 -o      Overwrite existing JPG files
 -d      Delete HEIC files after converting to JPG
--daae   Delete AAD and IMG_E files
 
 Sample: heictojpg -s -o -d
+
+GitHub: https://github.com/nsdnwe/HeicToJpg
+
+### Patch deletion attributes
+
+-dheic  Delete HEIC files if JPG file exists
+-dimg   Delete IMG_ files (4:3) if IMG_E file (16:9) exists
+-dimge  Delete IMG_E files (16:9) files if IMG_ file (4:3) exists
+-daae   Delete AAD files
 ```
