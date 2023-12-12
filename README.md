@@ -6,7 +6,7 @@ Require [Imagemagic](https://imagemagick.org) to be installed first. Download fr
 
 ## To install HeicToJpg
 
-1. Clone this code
+1. Clone this repository
 2. Compile in Visual Studio
 
 OR
@@ -26,7 +26,7 @@ OR
 -o      Overwrite existing JPG files
 -d      Delete HEIC files after converting to JPG
 
-Sample: heictojpg -s -o -d
+Sample: heictojpg -s -d
 
 GitHub: https://github.com/nsdnwe/HeicToJpg
 
