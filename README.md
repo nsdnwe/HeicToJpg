@@ -11,7 +11,7 @@ Require [Imagemagic](https://imagemagick.org) to be installed first. Download fr
 
 OR
 
-1. Download zip from [here](hhttps://wessman.blob.core.windows.net/blob/HeicToJpg.zip)
+1. Download zip from [here](https://wessman.blob.core.windows.net/blob/HeicToJpg.zip)
 2. Unzip ```HeicToJpg.exe``` to folder where HEIC images are located or some other folder that has [PATH](https://www.opentechguides.com/how-to/article/windows-10/113/windows-10-set-path.html) set
 
 ## To use HeicToJpg
