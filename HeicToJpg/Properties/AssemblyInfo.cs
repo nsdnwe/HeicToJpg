@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("HeicToJpg")]
-[assembly: AssemblyDescription("Command line HEIC to JPG converter")]
+[assembly: AssemblyDescription("Command-line HEIC to JPG converter")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("NSD Oy of Finland")]
 [assembly: AssemblyProduct("HeicToJpg")]

@@ -13,7 +13,7 @@ namespace HeicToJpg {
         static void Main(string[] args) {
             if (args.Any(z => z == "-h") || args.Any(z => z == "-?")) helpText();
 
-            Console.WriteLine("\r\nCommand line HEIC to JPG converter");
+            Console.WriteLine("\r\nCommand-line HEIC to JPG converter");
             Console.WriteLine("\r\nHelp: HeicToJpg -h \r\n");
 
             bool subFolders = args.Any(z => z == "-s");
@@ -23,13 +23,19 @@ namespace HeicToJpg {
             bool deleteImgs = args.Any(z => z == "-dimg");
             bool deleteImges = args.Any(z => z == "-dimge");
             bool deleteAaes = args.Any(z => z == "-daae");
+            bool moveFiles = args.Any(z => z == "-mbcd");
+            string baseFolder = System.IO.Directory.GetCurrentDirectory();
 
-            if(deleteImgs && deleteImges) {
-                Console.Write("Don't delete both IMG_ and IMG_E files");
+            // If move, no other action is taken
+            if (moveFiles) {
+                moveFilesByCreateDate(baseFolder);
                 Environment.Exit(0);
             }
 
-            string baseFolder = System.IO.Directory.GetCurrentDirectory();
+            if (deleteImgs && deleteImges) {
+                Console.Write("Don't delete both IMG_ and IMG_E files");
+                Environment.Exit(0);
+            }
 
             // First current directory
             processDirectory(baseFolder, overwriteJpgs, deleteConvertedHeics, deleteHeics, deleteImgs, deleteImges, deleteAaes);
@@ -64,13 +70,19 @@ namespace HeicToJpg {
                     runCommand(command);
                     Console.Write(fileName + " converted ");
 
+                    // Set creation date by original file
+                    DateTime creationTime = File.GetCreationTime(directory + "\\" + file.Name);
+                    DateTime modificationTime = File.GetLastWriteTime(directory + "\\" + file.Name);
+                    File.SetCreationTime(directory + "\\" + newFileName, creationTime);
+                    File.SetLastWriteTime(directory + "\\" + newFileName, modificationTime);
+
                     // Delete heic after converting
                     if (deleteConvertedHeics) {
                         file.Delete();
                         Console.Write("and deleted");
                     }
                     oneFileFound = true;
-                    filesConverted++;  
+                    filesConverted++;
                 }
             }
 
@@ -94,7 +106,7 @@ namespace HeicToJpg {
                 foreach (FileInfo file in files3) {
                     if (file.Name.StartsWith("IMG_") && !file.Name.StartsWith("IMG_E")) {
                         string checkFile = file.Name.Replace("IMG_", "IMG_E");
-                        if(File.Exists(directory.ToString() + "\\" + checkFile)) file.Delete();
+                        if (File.Exists(directory.ToString() + "\\" + checkFile)) file.Delete();
                     }
                 }
             }
@@ -145,10 +157,35 @@ namespace HeicToJpg {
             }
         }
 
+        private static void moveFilesByCreateDate(string directory) {
+            Console.WriteLine("Processing folder " + directory);
+
+            DirectoryInfo di = new DirectoryInfo(directory.ToString());
+            FileInfo[] files = di.GetFiles("*.jpg");
+            bool oneFileFound = false;
+
+            // Loop all the files in this directory
+            foreach (FileInfo file in files) {
+                string fileName = file.Name;
+                DateTime creationTime = File.GetCreationTime(directory + "\\" + file.Name);
+                string targetDirectory = directory + "\\" + creationTime.ToString("yyyy-MM-dd");
+                if (!Directory.Exists(targetDirectory)) Directory.CreateDirectory(targetDirectory);
+
+                if (!File.Exists(targetDirectory + "\\" + fileName)) {
+                    File.Move(directory + "\\" + fileName, targetDirectory + "\\" + fileName);
+                    Console.WriteLine(fileName + " moved to \\" + creationTime.ToString("yyyy-MM-dd"));
+                } else {
+                    Console.WriteLine(fileName + " already exists in target directory \\" + creationTime.ToString("yyyy-MM-dd"));
+                }
+            }
+        }
+
         // Help and available attributes
         private static void helpText() {
             string helpText = @"
-Command line HEIC to JPG converter
+----------------------------------
+Command-line HEIC to JPG converter
+----------------------------------
 
 -s      Process subfolders
 -o      Overwrite existing JPG files
@@ -156,16 +193,27 @@ Command line HEIC to JPG converter
 
 Sample: heictojpg -s -o -d
 
-GitHub: https://github.com/nsdnwe/HeicToJpg
-
----------------------------------------------------
-
+-------------------------
 Patch deletion attributes
+-------------------------
 
 -dheic  Delete HEIC files if JPG file exists
 -dimg   Delete IMG_ files (4:3) if IMG_E file (16:9) exists
 -dimge  Delete IMG_E files (16:9) files if IMG_ file (4:3) exists
--daae   Delete AAE files";
+-daae   Delete AAE files
+
+Sample: heictojpg -s -dheic -dimg -daae
+
+--------------------
+Patch move JPG files
+--------------------
+
+-mbcd   Move JPG files to folders by JPG file creation date. Create folder if needed
+
+Sample: heictojpg -mbcd
+
+GitHub: https://github.com/nsdnwe/HeicToJpg
+";
             Console.WriteLine(helpText);
             Environment.Exit(0);
         }

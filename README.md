@@ -1,4 +1,4 @@
-# Command line HEIC to JPG converter
+# Command-line HEIC to JPG converter
 
 Convert HEIC files to JPG in a folder and all it's subfolders.
 
@@ -20,20 +20,25 @@ OR
 2. Go to folder where HEIC images are located
 3. Enter command ```heictojpg```
 
-### Command line attributes
+### Command-line attributes for converting HEIC files
 ```
 -s      Process subfolders
 -o      Overwrite existing JPG files
 -d      Delete HEIC files after converting to JPG
 
 Sample: heictojpg -s -d
-
-GitHub: https://github.com/nsdnwe/HeicToJpg
-
+```
 ### Patch deletion attributes
-
+```
 -dheic  Delete HEIC files if JPG file exists
 -dimg   Delete IMG_ files (4:3) if IMG_E file (16:9) exists
 -dimge  Delete IMG_E files (16:9) files if IMG_ file (4:3) exists
 -daae   Delete AAE files
+
+Sample: heictojpg -s -dheic -dimg -daae
 ```
+### Patch move JPG files
+```
+-mbcd   Move JPG files to folders by file creation date. Create folder if needed
+
+Sample: heictojpg -mbcd
