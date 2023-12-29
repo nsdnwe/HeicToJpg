@@ -183,7 +183,7 @@ namespace HeicToJpg {
         // Help and available attributes
         private static void helpText() {
             string helpText = @"
-----------------------------------
+---------------------------------- 
 Command-line HEIC to JPG converter
 ----------------------------------
 
