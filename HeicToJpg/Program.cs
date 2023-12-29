@@ -204,9 +204,9 @@ Patch deletion attributes
 
 Sample: heictojpg -s -dheic -dimg -daae
 
---------------------
-Patch move JPG files
---------------------
+-------------------------------
+Patch move JPG files attributes
+-------------------------------
 
 -mbcd   Move JPG files to folders by JPG file creation date. Create folder if needed
 
