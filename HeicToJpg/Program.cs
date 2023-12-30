@@ -103,7 +103,7 @@ namespace HeicToJpg {
             if (deleteImgs) {
                 Console.WriteLine("Deleting IMG_ files if IMG_E exists");
                 FileInfo[] files3 = di.GetFiles("*.JPG");
-                foreach (FileInfo file in files3) {
+                foreach (FileInfo file in files3) { 
                     if (file.Name.StartsWith("IMG_") && !file.Name.StartsWith("IMG_E")) {
                         string checkFile = file.Name.Replace("IMG_", "IMG_E");
                         if (File.Exists(directory.ToString() + "\\" + checkFile)) file.Delete();
@@ -182,8 +182,8 @@ namespace HeicToJpg {
 
         // Help and available attributes
         private static void helpText() {
-            string helpText = @"
----------------------------------- 
+            string helpText = @" 
+----------------------------------  
 Command-line HEIC to JPG converter
 ----------------------------------
 
