@@ -30,15 +30,15 @@ Sample: heictojpg -s -d
 ```
 ### Patch deletion attributes
 ```
--dheic  Delete HEIC files if JPG file exists
--dimg   Delete IMG_ files (4:3) if IMG_E file (16:9) exists
--dimge  Delete IMG_E files (16:9) files if IMG_ file (4:3) exists
+-dheic  Delete HEIC files if JPG file with same name exists
+-dimg   Delete IMG_ files (4:3) if IMG_E file (16:9) with same name exists
+-dimge  Delete IMG_E files (16:9) if IMG_ file (4:3) with same name exists
 -daae   Delete AAE files
 
 Sample: heictojpg -s -dheic -dimg -daae
 ```
 ### Patch move JPG files attributes
 ```
--mbcd   Move JPG files to folders by file creation date. Create folder if needed
+-mbcd   Move JPG files to folders based on file creation date. Create folder if needed and name in format yyyy-MM-dd
 
 Sample: heictojpg -mbcd
