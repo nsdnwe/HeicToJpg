@@ -37,8 +37,11 @@ Sample: heictojpg -s -d
 
 Sample: heictojpg -s -dheic -dimg -daae
 ```
-### Patch move JPG files attributes
+### Patch move attributes
 ```
--mbcd   Move JPG files to folders based on file creation date. Create folder if needed and name in format yyyy-MM-dd
+-move   Move files to folders based on file date
+-o      Overwrite existing files
 
-Sample: heictojpg -mbcd
+Creates folder if needed and name folder using format yyyy-MM-dd
+
+Sample: heictojpg -move -o

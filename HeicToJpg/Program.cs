@@ -17,18 +17,18 @@ namespace HeicToJpg {
             Console.WriteLine("\r\nHelp: HeicToJpg -h \r\n");
 
             bool subFolders = args.Any(z => z == "-s");
-            bool overwriteJpgs = args.Any(z => z == "-o");
+            bool overwrite = args.Any(z => z == "-o");
             bool deleteConvertedHeics = args.Any(z => z == "-d");
             bool deleteHeics = args.Any(z => z == "-dheic");
             bool deleteImgs = args.Any(z => z == "-dimg");
             bool deleteImges = args.Any(z => z == "-dimge");
             bool deleteAaes = args.Any(z => z == "-daae");
-            bool moveFiles = args.Any(z => z == "-mbcd");
+            bool moveFiles = args.Any(z => z == "-move");
             string baseFolder = System.IO.Directory.GetCurrentDirectory();
 
             // If move, no other action is taken
             if (moveFiles) {
-                moveFilesByCreateDate(baseFolder);
+                moveFilesByDate(baseFolder, overwrite);
                 Environment.Exit(0);
             }
 
@@ -38,12 +38,12 @@ namespace HeicToJpg {
             }
 
             // First current directory
-            processDirectory(baseFolder, overwriteJpgs, deleteConvertedHeics, deleteHeics, deleteImgs, deleteImges, deleteAaes);
+            processDirectory(baseFolder, overwrite, deleteConvertedHeics, deleteHeics, deleteImgs, deleteImges, deleteAaes);
 
             // Then all subdirectories
             if (subFolders) {
                 foreach (var directory in Directory.GetDirectories(baseFolder)) {
-                    processDirectory(directory, overwriteJpgs, deleteConvertedHeics, deleteHeics, deleteImgs, deleteImges, deleteAaes);
+                    processDirectory(directory, overwrite, deleteConvertedHeics, deleteHeics, deleteImgs, deleteImges, deleteAaes);
                 }
             }
 
@@ -157,25 +157,32 @@ namespace HeicToJpg {
             }
         }
 
-        private static void moveFilesByCreateDate(string directory) {
+        private static void moveFilesByDate(string directory, bool overwrite) {
             Console.WriteLine("Processing folder " + directory);
 
             DirectoryInfo di = new DirectoryInfo(directory.ToString());
-            FileInfo[] files = di.GetFiles("*.jpg");
+            FileInfo[] files = di.GetFiles("*.*");
             bool oneFileFound = false;
 
             // Loop all the files in this directory
             foreach (FileInfo file in files) {
                 string fileName = file.Name;
-                DateTime creationTime = File.GetCreationTime(directory + "\\" + file.Name);
-                string targetDirectory = directory + "\\" + creationTime.ToString("yyyy-MM-dd");
-                if (!Directory.Exists(targetDirectory)) Directory.CreateDirectory(targetDirectory);
+                if (!fileName.ToLower().Contains("heictojpg.")) {
+                    DateTime fileDate = File.GetLastWriteTime(directory + "\\" + file.Name);
+                    string targetDirectory = directory + "\\" + fileDate.ToString("yyyy-MM-dd");
+                    if (!Directory.Exists(targetDirectory)) Directory.CreateDirectory(targetDirectory);
 
-                if (!File.Exists(targetDirectory + "\\" + fileName)) {
-                    File.Move(directory + "\\" + fileName, targetDirectory + "\\" + fileName);
-                    Console.WriteLine(fileName + " moved to \\" + creationTime.ToString("yyyy-MM-dd"));
-                } else {
-                    Console.WriteLine(fileName + " already exists in target directory \\" + creationTime.ToString("yyyy-MM-dd"));
+                    if (!File.Exists(targetDirectory + "\\" + fileName)) {
+                        File.Move(directory + "\\" + fileName, targetDirectory + "\\" + fileName);
+                        Console.WriteLine(fileName + " moved to \\" + fileDate.ToString("yyyy-MM-dd"));
+                    } else {
+                        if (overwrite) {
+                            File.Delete(targetDirectory + "\\" + fileName);
+                            File.Move(directory + "\\" + fileName, targetDirectory + "\\" + fileName);
+                            Console.WriteLine(fileName + " moved to \\" + fileDate.ToString("yyyy-MM-dd"));
+                        } else
+                            Console.WriteLine(fileName + " already exists in target directory \\" + fileDate.ToString("yyyy-MM-dd"));
+                    }
                 }
             }
         }
@@ -204,15 +211,22 @@ Patch deletion attributes
 
 Sample: heictojpg -s -dheic -dimg -daae
 
--------------------------------
-Patch move JPG files attributes
--------------------------------
+---------------------
+Patch move attributes
+---------------------
 
--mbcd   Move JPG files to folders based on file creation date. Create folder if needed and name in format yyyy-MM-dd
+-move   Move files to folders based on file date
+-o      Overwrite existing files
 
-Sample: heictojpg -mbcd
+Creates folder if needed and name folder using format yyyy-MM-dd
 
-GitHub: https://github.com/nsdnwe/HeicToJpg
+Sample: heictojpg -move -o
+
+---------------------
+Source code in GitHub 
+---------------------
+
+https://github.com/nsdnwe/HeicToJpg
 ";
             Console.WriteLine(helpText);
             Environment.Exit(0);
