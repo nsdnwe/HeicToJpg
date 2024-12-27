@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+
+using static System.Net.Mime.MediaTypeNames;
 
 // NSD Oy Finland - MIT license
 // First install: https://imagemagick.org/script/download.php#windows
@@ -23,12 +26,30 @@ namespace HeicToJpg {
             bool deleteImgs = args.Any(z => z == "-dimg");
             bool deleteImges = args.Any(z => z == "-dimge");
             bool deleteAaes = args.Any(z => z == "-daae");
+            bool delete2268 = args.Any(z => z == "-d2268");
             bool moveFiles = args.Any(z => z == "-move");
             string baseFolder = System.IO.Directory.GetCurrentDirectory();
+
+            //delete2268 = true;
+            //subFolders = true;
+            //deleteAaes = true;  
 
             // If move, no other action is taken
             if (moveFiles) {
                 moveFilesByDate(baseFolder, overwrite);
+                Environment.Exit(0);
+            }
+
+            // If delete 2268, no other action is taken
+            if (delete2268) {
+                processDirectoryForD2268(baseFolder, deleteAaes);
+
+                // Then all subdirectories
+                if (subFolders) {
+                    foreach (var directory in Directory.GetDirectories(baseFolder)) {
+                        processDirectoryForD2268(directory, deleteAaes);
+                    }
+                }
                 Environment.Exit(0);
             }
 
@@ -59,6 +80,7 @@ namespace HeicToJpg {
             bool oneFileFound = false;
 
             // Loop all the files in this directory
+            // HEIC to JPG conversion
             foreach (FileInfo file in files) {
                 string fileName = file.Name.Replace(".HEIC", ".heic");
                 string newFileName = fileName.Replace(".heic", ".jpg");
@@ -132,7 +154,7 @@ namespace HeicToJpg {
         }
 
         // Run magick with parameters
-        public static void runCommand(string command) {
+        public static string runCommand(string command) {
             ProcessStartInfo procStartInfo = new ProcessStartInfo("cmd", "/c " + command);
             procStartInfo.RedirectStandardInput = true;
             procStartInfo.RedirectStandardOutput = true;
@@ -155,6 +177,7 @@ namespace HeicToJpg {
                 Console.WriteLine("Download from https://imagemagick.org/script/download.php#windows");
                 Environment.Exit(0);
             }
+            return result;
         }
 
         private static void moveFilesByDate(string directory, bool overwrite) {
@@ -187,7 +210,48 @@ namespace HeicToJpg {
             }
         }
 
-        // Help and available attributes
+        private static void processDirectoryForD2268(string directory, bool deleteAaes) {
+            //// Get last subfolder name
+            //string[] subFolders = directory.Split('\\');
+            //string lastFolder = subFolders[subFolders.Length - 1];
+
+            //if (!lastFolder.StartsWith("2023") && !lastFolder.StartsWith("2024")) return;
+            //int year = int.Parse(lastFolder.Substring(0, 4));
+            //int month = int.Parse(lastFolder.Substring(5, 2));
+            //int day = int.Parse(lastFolder.Substring(8, 2));
+            //DateTime date = new DateTime(year, month, day);
+            //if (date < new DateTime(2023, 12, 14)) return;
+
+            Console.WriteLine("Processing folder " + directory);
+
+            DirectoryInfo di = new DirectoryInfo(directory.ToString());
+            FileInfo[] files = di.GetFiles("*.JPG");
+            bool oneFileFound = false;
+
+            // Loop all the files in this directory
+            
+            List<string> filesToDelete = new List<string>();
+            foreach (FileInfo file in files) {
+                // Delete files with width or height 2268 pixels
+                using (var image = System.Drawing.Image.FromFile(directory + "\\" + file.Name)) {
+                    if (image.Width == 2268 || image.Height == 2268) {
+                        if (!file.Name.StartsWith("IMG_") && !file.Name.StartsWith("IMG_E")) filesToDelete.Add(file.Name);
+                    }
+                }
+            }
+            foreach (var file in filesToDelete) {
+                Console.WriteLine("Deleting " + file);
+                File.Delete(directory + "\\" + file);
+            }
+            // Delete AAE files
+            if (deleteAaes) {
+                Console.WriteLine("Deleting AAE files");
+                FileInfo[] files2 = di.GetFiles("*.AAE");
+                foreach (FileInfo file in files2) file.Delete();
+            }
+        }
+
+            // Help and available attributes
         private static void helpText() {
             string helpText = @" 
 ----------------------------------  
@@ -210,6 +274,15 @@ Patch deletion attributes
 -daae   Delete AAE files
 
 Sample: heictojpg -s -dheic -dimg -daae
+
+-----------------------------------------
+### Delete 2268 pixel images (dublicates)
+-----------------------------------------
+-d2268  Delete all files that has width or height 2268 pixels and not named as IMG_ or IMG_E
+-s      Process subfolders
+-daae   Delete AAE files
+
+Sample: heictojpg -d2268 -s -daae
 
 ---------------------
 Patch move attributes

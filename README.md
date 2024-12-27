@@ -37,6 +37,14 @@ Sample: heictojpg -s -d
 
 Sample: heictojpg -s -dheic -dimg -daae
 ```
+### Delete 2268 pixel images (dublicates)
+```
+-d2268  Delete all files that has width or height 2268 pixels and not named as IMG_ or IMG_E
+-s      Process subfolders
+-daae   Delete AAE files
+
+Sample: heictojpg -d2268 -s -daae
+```
 ### Patch move attributes
 ```
 -move   Move files to folders based on file date
